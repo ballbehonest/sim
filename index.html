@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏀 NBA · teams & stats</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #f5f7fc;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1300px;
+      width: 100%;
+      background: white;
+      border-radius: 2rem;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 2.2rem;
+      letter-spacing: -0.5px;
+      color: #1a2639;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.25rem;
+    }
+    h1 small {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #4a5b6e;
+      margin-left: 0.5rem;
+    }
+    .sub {
+      color: #3d4e62;
+      margin-bottom: 1.8rem;
+      border-left: 4px solid #2e7daf;
+      padding-left: 1rem;
+      font-size: 1rem;
+      background: #eef4fa;
+      border-radius: 0 12px 12px 0;
+      display: inline-block;
+      padding: 0.4rem 1.2rem;
+    }
+    .api-section {
+      background: #f0f4fe;
+      border-radius: 60px;
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.5rem 0 2rem 0;
+      border: 1px solid #d9e2ef;
+    }
+    .api-section label {
+      font-weight: 500;
+      color: #1e2b3c;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .api-section input {
+      flex: 2 1 260px;
+      padding: 0.7rem 1rem;
+      border: 1px solid #bcc9db;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      background: white;
+      outline: none;
+      transition: 0.15s;
+    }
+    .api-section input:focus {
+      border-color: #1f6fb5;
+      box-shadow: 0 0 0 3px rgba(31, 111, 181, 0.2);
+    }
+    .api-section button {
+      background: #1f6fb5;
+      border: none;
+      color: white;
+      font-weight: 500;
+      padding: 0.7rem 1.8rem;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: 0.15s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      border: 1px solid #1a5d99;
+    }
+    .api-section button:hover {
+      background: #13558f;
+      transform: scale(0.97);
+    }
+    .api-section button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status {
+      margin: 0.2rem 0 1.2rem 0;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      background: #e9edf4;
+      display: inline-block;
+      color: #1f3a57;
+      font-size: 0.9rem;
+    }
+    .status.error {
+      background: #fde8e8;
+      color: #a12b2b;
+    }
+    .status.success {
+      background: #e6f4e6;
+      color: #1a6b1a;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.8rem;
+      margin-top: 1.5rem;
+    }
+    .team-card {
+      background: white;
+      border-radius: 1.8rem;
+      padding: 1.5rem 1.2rem 1.2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e6ecf5;
+      transition: 0.2s;
+    }
+    .team-card:hover {
+      border-color: #bdd0e8;
+      box-shadow: 0 8px 18px rgba(0, 20, 40, 0.06);
+    }
+    .team-name {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #0b1a2b;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      border-bottom: 2px dashed #dbe3ef;
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.8rem;
+    }
+    .team-abbr {
+      background: #dce5f2;
+      padding: 0.1rem 0.7rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #1f3e5c;
+    }
+    .season-block {
+      background: #f8fafd;
+      border-radius: 1.2rem;
+      padding: 0.8rem 0.8rem 0.2rem 0.8rem;
+      margin-top: 0.7rem;
+      border-left: 4px solid #86b3d6;
+    }
+    .season-title {
+      font-weight: 600;
+      color: #1d3a58;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.3rem;
+    }
+    .roster-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.3rem 0 0.2rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .roster-list li {
+      background: white;
+      padding: 0.4rem 0.8rem;
+      margin: 0.25rem 0;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      align-items: center;
+      border: 1px solid #e2eaf5;
+    }
+    .player-name {
+      font-weight: 500;
+      color: #0b1f31;
+    }
+    .player-stats {
+      font-size: 0.8rem;
+      color: #2d4b6a;
+      background: #e5edf8;
+      padding: 0.1rem 0.6rem;
+      border-radius: 30px;
+    }
+    .empty-message {
+      color: #5d738b;
+      padding: 2rem 1rem;
+      text-align: center;
+      background: #f2f6fd;
+      border-radius: 3rem;
+      margin-top: 1rem;
+    }
+    .footer-note {
+      margin-top: 2.5rem;
+      font-size: 0.85rem;
+      color: #50647b;
+      border-top: 1px solid #dce3ef;
+      padding-top: 1.5rem;
+      text-align: center;
+    }
+    .badge {
+      background: #1f6fb5;
+      color: white;
+      border-radius: 30px;
+      padding: 0.1rem 0.7rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(31, 111, 181, 0.3);
+      border-radius: 50%;
+      border-top-color: #1f6fb5;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .proxy-notice {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 30px;
+      padding: 0.5rem 1.2rem;
+      margin: 0.5rem 0 1rem;
+      font-size: 0.85rem;
+      color: #856404;
+    }
+    .stats-loading {
+      color: #6c757d;
+      font-size: 0.8rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>
+    🏀 NBA · teams & stats
+    <small>balldontlie</small>
+  </h1>
+  <div class="sub">every team · every season · roster + player stats</div>
+
+  <div class="proxy-notice">
+    ⚡ Using CORS proxy to bypass Neocities restrictions
+  </div>
+
+  <!-- API KEY INPUT -->
+  <div class="api-section">
+    <label for="apiKeyInput">🔑 API key</label>
+    <input type="text" id="apiKeyInput" placeholder="your balldontlie API key" value="">
+    <button id="fetchBtn">⟳ fetch data</button>
+  </div>
+  <div id="statusMessage" class="status">⏳ ready – enter key and press fetch</div>
+
+  <!-- DYNAMIC CONTENT -->
+  <div id="contentArea">
+    <div class="empty-message">💡 teams, seasons & stats will appear here</div>
+  </div>
+  <div class="footer-note">
+    ⚡ balldontlie API · roster & stats for each season
+  </div>
+</div>
+<script>
+  (function(){
+    "use strict";
+
+    const apiInput = document.getElementById('apiKeyInput');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const statusDiv = document.getElementById('statusMessage');
+    const contentArea = document.getElementById('contentArea');
+
+    // CORS proxy to bypass Neocities CSP
+    const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
+    function setStatus(msg, type = '') {
+      statusDiv.textContent = msg;
+      statusDiv.className = 'status ' + type;
+    }
+
+    // Fetch with CORS proxy
+    async function fetchWithProxy(url, apiKey) {
+      const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Authorization': apiKey
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return await response.json();
+    }
+
+    async function fetchAllTeams(apiKey) {
+      let allTeams = [];
+      let page = 1;
+      let totalPages = 1;
+
+      while (page <= totalPages) {
+        const url = `https://api.balldontlie.io/v1/teams?page=${page}&per_page=100`;
+        const data = await fetchWithProxy(url, apiKey);
+        
+        if (!data.data || !Array.isArray(data.data)) {
+          throw new Error('Unexpected teams response format');
+        }
+        allTeams = allTeams.concat(data.data);
+        totalPages = data.meta?.total_pages || 1;
+        page++;
+      }
+      return allTeams;
+    }
+
+    async function fetchPlayersForTeam(apiKey, teamId) {
+      const players = [];
+      let page = 1;
+      let totalPages = 1;
+
+      while (page <= totalPages) {
+        const url = `https://api.balldontlie.io/v1/players?team_ids[]=${teamId}&page=${page}&per_page=100`;
+        const data = await fetchWithProxy(url, apiKey);
+        
+        if (!data.data || !Array.isArray(data.data)) {
+          throw new Error('Unexpected players response');
+        }
+        players.push(...data.data);
+        totalPages = data.meta?.total_pages || 1;
+        page++;
+      }
+      return players;
+    }
+
+    async function fetchPlayerStats(apiKey, playerId) {
+      const stats = [];
+      let page = 1;
+      let totalPages = 1;
+
+      while (page <= totalPages) {
+        const url = `https://api.balldontlie.io/v1/stats?player_ids[]=${playerId}&page=${page}&per_page=100`;
+        const data = await fetchWithProxy(url, apiKey);
+        
+        if (!data.data || !Array.isArray(data.data)) {
+          throw new Error('Unexpected stats response');
+        }
+        stats.push(...data.data);
+        totalPages = data.meta?.total_pages || 1;
+        page++;
+      }
+      return stats;
+    }
+
+    function aggregateStatsBySeason(statsArray) {
+      const seasonMap = new Map();
+      for (const stat of statsArray) {
+        const season = stat.season;
+        if (!season) continue;
+        if (!seasonMap.has(season)) {
+          seasonMap.set(season, { ptsSum: 0, rebSum: 0, astSum: 0, count: 0 });
+        }
+        const entry = seasonMap.get(season);
+        entry.ptsSum += (stat.pts || 0);
+        entry.rebSum += (stat.reb || 0);
+        entry.astSum += (stat.ast || 0);
+        entry.count += 1;
+      }
+      const result = {};
+      for (const [season, data] of seasonMap.entries()) {
+        const count = data.count;
+        result[season] = {
+          pts: count > 0 ? (data.ptsSum / count) : 0,
+          reb: count > 0 ? (data.rebSum / count) : 0,
+          ast: count > 0 ? (data.astSum / count) : 0,
+        };
+      }
+      return result;
+    }
+
+    async function fetchAndRender(apiKey) {
+      if (!apiKey || apiKey.trim() === '') {
+        setStatus('❌ please enter a balldontlie API key', 'error');
+        return;
+      }
+
+      fetchBtn.disabled = true;
+      setStatus('⏳ fetching teams ...', '');
+      contentArea.innerHTML = `<div class="empty-message"><span class="loading-spinner"></span> loading teams & players...</div>`;
+
+      try {
+        const teams = await fetchAllTeams(apiKey);
+        if (!teams.length) {
+          setStatus('⚠️ no teams found', 'error');
+          contentArea.innerHTML = `<div class="empty-message">⚠️ no teams returned. Check API key.</div>`;
+          fetchBtn.disabled = false;
+          return;
+        }
+
+        setStatus(`⏳ loading roster & stats for ${teams.length} teams ...`, '');
+
+        const teamDataArray = [];
+        let processedTeams = 0;
+
+        for (const team of teams) {
+          try {
+            const players = await fetchPlayersForTeam(apiKey, team.id);
+            
+            const playerPromises = players.map(async (player) => {
+              try {
+                const stats = await fetchPlayerStats(apiKey, player.id);
+                const seasonStats = aggregateStatsBySeason(stats);
+                return {
+                  id: player.id,
+                  firstName: player.first_name || '',
+                  lastName: player.last_name || '',
+                  position: player.position || 'N/A',
+                  seasonStats: seasonStats,
+                };
+              } catch (err) {
+                return {
+                  id: player.id,
+                  firstName: player.first_name || '',
+                  lastName: player.last_name || '',
+                  position: player.position || 'N/A',
+                  seasonStats: {},
+                };
+              }
+            });
+            
+            const playersWithStats = await Promise.all(playerPromises);
+            teamDataArray.push({
+              team: team,
+              players: playersWithStats,
+            });
+            
+            processedTeams++;
+            setStatus(`⏳ processing ${processedTeams}/${teams.length} teams ...`, '');
+            
+          } catch (err) {
+            teamDataArray.push({
+              team: team,
+              players: [],
+              error: err.message,
+            });
+          }
+        }
+
+        const totalPlayers = teamDataArray.reduce((acc, t) => acc + t.players.length, 0);
+        setStatus(`✅ loaded ${teams.length} teams · ${totalPlayers} players`, 'success');
+        renderTeamData(teamDataArray);
+
+      } catch (err) {
+        setStatus(`❌ error: ${err.message}`, 'error');
+        contentArea.innerHTML = `<div class="empty-message">⚠️ ${err.message}</div>`;
+      } finally {
+        fetchBtn.disabled = false;
+      }
+    }
+
+    function renderTeamData(teamDataArray) {
+      if (!teamDataArray || teamDataArray.length === 0) {
+        contentArea.innerHTML = `<div class="empty-message">⚠️ no team data to display</div>`;
+        return;
+      }
+
+      let html = `<div class="team-grid">`;
+
+      for (const item of teamDataArray) {
+        const team = item.team;
+        const players = item.players || [];
+        const teamName = team.full_name || team.name || 'Unknown';
+        const teamAbbr = team.abbreviation || '';
+
+        html += `<div class="team-card">`;
+        html += `<div class="team-name">${teamName} <span class="team-abbr">${teamAbbr}</span></div>`;
+
+        const allSeasonsSet = new Set();
+        for (const p of players) {
+          for (const season of Object.keys(p.seasonStats || {})) {
+            allSeasonsSet.add(season);
+          }
+        }
+        const seasons = Array.from(allSeasonsSet).sort();
+
+        if (seasons.length === 0) {
+          html += `<div style="color:#5d738b; padding:0.5rem 0;">no season stats available</div>`;
+        } else {
+          for (const season of seasons) {
+            html += `<div class="season-block">`;
+            html += `<div class="season-title">📅 ${season} <span class="badge">${players.length} players</span></div>`;
+            html += `<ul class="roster-list">`;
+
+            const sorted = [...players].sort((a,b) => (a.lastName || '').localeCompare(b.lastName || ''));
+            for (const player of sorted) {
+              const stats = player.seasonStats?.[season] || null;
+              const fullName = `${player.firstName || ''} ${player.lastName || ''}`.trim() || `#${player.id}`;
+              let statLine = '';
+              if (stats) {
+                statLine = `pts ${stats.pts.toFixed(1)} · reb ${stats.reb.toFixed(1)} · ast ${stats.ast.toFixed(1)}`;
+              } else {
+                statLine = `no stats`;
+              }
+              html += `<li>
+                <span class="player-name">${fullName} <span style="font-size:0.7rem; color:#5e7490;">${player.position || ''}</span></span>
+                <span class="player-stats">${statLine}</span>
+              </li>`;
+            }
+            html += `</ul></div>`;
+          }
+        }
+
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+      contentArea.innerHTML = html;
+    }
+
+    fetchBtn.addEventListener('click', function() {
+      const key = apiInput.value.trim();
+      fetchAndRender(key);
+    });
+
+    setStatus('🔑 enter your balldontlie API key and click fetch', '');
+  })();
+</script>
+</body>
+</html>
